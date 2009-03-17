@@ -1,0 +1,45 @@
+#
+# SeaShell
+#
+# Capistrano deployment recipes for seaside platforms
+#
+# Author: Andreas Brodbeck, mindclue gmbh, www.mindclue.ch
+# Licence: MIT (see LICENSE file)
+#                                          
+
+***************************************************************************************************
+!!! Important !!! Remove the line GEMS="9001 9002 9003" from the file runSeasideGems on your server.
+The GEMS environment variable will be automatically controlled by SeaShell.
+***************************************************************************************************
+
+Remarks
+=======
+- Make shure your server does NOT load your login profile, when connecting with a non-login shell (Some systems do, I heard! Ubuntu doesn't.).
+  This potentialy could override some environment settings from the capistrano recipes.
+- Your applications are stored in /opt/gemstone/applications/<app_name>
+- Don't be confused by the name "gem". It is also used by ruby, not only by gemstone.
+- Remove the line GEMS="9001 9002 9003" from the file runSeasideGems on your server.
+- Include the vhost configuration files in the lighttpd.conf with this line at the end of the file:
+  include_shell "cat seaside_applications/*.conf"
+- Tested with Gemstone 2.3.1, running on a 256MB slicehost with lighttpd as frontend web server.
+          
+How to install
+==============
+- get it as (ruby-)gem "dassi-seashell" from github.com (if available already) or get it directly as source from github.com
+- Put everything in a folder "deployment" (or similar) at your project folder on your development machine.
+- Depends on (ruby-)gem "capistrano" (>=2.5.5)
+
+How to use
+==========
+- Open a shell in your deployment subfolder (probably named "deployment")
+- Use "cap -T" on the shell to get a list of tasks and their description
+- Fill in some configurations in the file config.rb
+- Optional: Add a file on top level called tasks.rb, which will hold your project specific additional tasks.
+     
+Links
+=====
+- Read http://programminggems.wordpress.com/2008/09/05/setting-up-glass-on-slicehost/ for installation example of the Gemstone system on a slicehost server.
+- http://www.seaside.st
+- http://seaside.gemstone.com
+- http://andreas.mindclue.ch/blog
+

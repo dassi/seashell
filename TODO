@@ -1,0 +1,14 @@
+#
+# SeaShell
+#
+# Capistrano deployment recipes for seaside platforms
+#
+# Author: Andreas Brodbeck, mindclue gmbh, www.mindclue.ch
+# Licence: MIT (see LICENSE file)
+#                                          
+
+Wish and todo list
+==================
+
+- Write tasks for monit or any other monitoring tool
+- Better handling of secure stored passwords.
