@@ -32,8 +32,8 @@ How to install
 How to use
 ==========
 - Open a shell in your deployment subfolder (probably named "deployment")
-- Use "cap -T" on the shell to get a list of tasks and their description
 - Fill in some configurations in the file config.rb
+- Run "cap -T" on the shell to get a list of tasks and their description
 - Optional: Add a file on top level called tasks.rb, which will hold your project specific additional tasks.
      
 Links
