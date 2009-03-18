@@ -27,7 +27,7 @@ How to install
 ==============
 - get it as (ruby-)gem "dassi-seashell" from github.com (if available already) or get it directly as source from github.com
 - Put everything in a folder "deployment" (or similar) at your project folder on your development machine.
-- Depends on (ruby-)gem "capistrano" (>=2.5.5)
+- Depends on (ruby-)gem "capistrano", version >=2.5.5. To install capistrano, run this on your shell: "sudo gem install capistrano"
 
 How to use
 ==========
