@@ -39,7 +39,7 @@ namespace :deploy do
 SMALLTALK
 
     # Debug, show the script:
-    # Capistrano::CLI.ui.say(monticello_load_script)
+    Capistrano::CLI.ui.say(monticello_load_script)
 
     if Capistrano::CLI.ui.ask("Really load version #{monticello_file}?")
       run_gs(monticello_load_script)
@@ -47,41 +47,7 @@ SMALLTALK
   end
 
 
-  desc 'Lists all available versions from the monticello repository'
-  task :show_versions do
-    Capistrano::CLI.ui.say(get_monticello_versions.join(', '))
-  end
 
-
-  # Gets a list of available monticello versions (via topaz)
-  def get_monticello_versions
-
-    # Get versions from monticello and list them in a file
-    smalltalk_code = <<-SMALLTALK
-        | httpRepository versions myFile |
-        MCPlatformSupport autoMigrate: false.
-        httpRepository := MCHttpRepository
-            location: '#{monticello_repository_url}'
-            user: '#{monticello_repository_user}'
-            password: '#{monticello_repository_password}'.
-        versions := httpRepository readableFileNames.
-        myFile := GsFile openWriteOnServer: 'monticello_versions.txt'.
-        versions do: [:each |
-            myFile nextPutAll: each.
-            myFile cr.].
-        myFile close.
-SMALLTALK
-
-    run_gs(smalltalk_code)
-
-    # Download the file with the list
-    get 'monticello_versions.txt', 'monticello_versions.txt'
-
-    versions = File.readlines('monticello_versions.txt', "\n").collect{ |s| s.strip }
-    File.delete('monticello_versions.txt')
-
-    versions
-  end
 
 
   # Tasks related to setting up the environment
@@ -132,4 +98,37 @@ SMALLTALK
     files.each { |file| top.upload(file, File.join(path_application, file)) }
   end
 
+end
+
+
+# Gets a list of available monticello versions (via topaz)
+def get_monticello_versions
+
+  output_filename = 'monticello_versions.txt'
+  
+  # Get versions from monticello and list them in a file
+  smalltalk_code = <<-SMALLTALK
+      | httpRepository versions myFile |
+      MCPlatformSupport autoMigrate: false.
+      httpRepository := MCHttpRepository
+          location: '#{monticello_repository_url}'
+          user: '#{monticello_repository_user}'
+          password: '#{monticello_repository_password}'.
+      versions := httpRepository readableFileNames.
+      myFile := GsFile openWriteOnServer: 'monticello_versions.txt'.
+      versions do: [:each | 
+          myFile nextPutAll: each.
+          myFile cr.].
+      myFile close.
+SMALLTALK
+
+  run_gs(smalltalk_code)
+
+  # Download the file with the list
+  get output_filename, output_filename
+
+  versions = File.readlines(output_filename, "\n").collect{ |s| s.strip }
+  File.delete(output_filename)
+
+  versions
 end

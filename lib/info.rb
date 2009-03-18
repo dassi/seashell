@@ -18,4 +18,26 @@ namespace :info do
     run 'env | sort'
   end
 
+  namespace :version do
+    desc 'Lists all available versions from the monticello repository'
+    task :all do
+      say "All available versions are: #{get_monticello_versions.join(', ')}"
+    end
+
+    desc 'Show the currently installed version'
+    task :installed do
+      script = "output := (MCPackage named: '#{monticello_package_name}') workingCopy description"
+      version = run_gs(script)
+      say "Current installed version is: #{version}"
+    end
+
+    desc 'Show the newest available version'
+    task :newest do
+      version = get_monticello_versions.first
+      say "Newest version is: #{version}"
+    end
+    
+  end
+  
+
 end

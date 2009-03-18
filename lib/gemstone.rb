@@ -96,16 +96,38 @@ end
 
 
 # Executes smalltalk code on gemstone via topaz
+# You can use the implicit variable "output" to set content which is return to seashell
 def run_gs(smalltalk_code)
+  
+  output_filename = 'seashell_output.txt'
+
+  smalltalk_code.strip!
+  
+  # For correct syntax we need a "." at the end of the given embedded Smalltalk code
+  if smalltalk_code[-1,1] != '.'
+    smalltalk_code << '.'
+  end
+
+  # Manipulate the first line, if it contains variable declarations of Smalltalk we need to inject our "output" variable
+  if StringIO.new(smalltalk_code).readlines.first =~ /^.*\|.*\|.*$/
+    smalltalk_code.gsub!(/^.*\|(.*)\|.*$/, '| \1 output |')
+    declaration = nil
+  else
+    declaration = '| output |'
+  end
 
   topaz_script = <<-TEXT
 set gemstone #{stone}
 set username #{gemstone_user}
 set password #{gemstone_password}
 login
-output pushnew topaz_script.log
+output push topaz_script.log
 printit
+#{declaration}
 #{smalltalk_code}
+(GsFile openWriteOnServer: '#{output_filename}')
+  nextPutAll: output asString;
+  close.
 %
 logout
 exit
@@ -113,6 +135,27 @@ TEXT
 
   # Run smalltalk script via topaz, ignoring standard ini-file and quieting output of topaz.
   put topaz_script, 'topaz_script.tmp'
-  run "topazl -q -i < topaz_script.tmp && rm topaz_script.tmp"
+  begin
+    run "topazl -q -i < topaz_script.tmp > /dev/null"
+  rescue CommandError
+    trace 'Topaz error!!!'
+    run 'cat topaz_script.log'
+    raise
+  end
+
+  # Get the output text file and read it
+  begin
+    get output_filename, output_filename
+    output = File.read(output_filename)
+    File.delete(output_filename)
+  rescue
+    output = ''
+  end
+
+  # Clean up on server
+  run "rm topaz_script.tmp #{output_filename}"
+
+  # Return the value coming from topaz
+  return output
 
 end

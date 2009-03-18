@@ -13,6 +13,7 @@ load 'config.rb'
 load 'tasks.rb' if File.exists?('tasks.rb')
 
 # Load tasks from libraries
+load 'lib/helpers.rb'
 load 'lib/lighty.rb'
 load 'lib/gemstone.rb'
 load 'lib/deploy.rb'
