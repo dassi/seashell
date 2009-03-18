@@ -47,6 +47,11 @@ SMALLTALK
   end
 
 
+  desc 'Deploys the static files from your seaside FileLibrary to disk'
+  task :write_file_libraries_to_disk do
+    # TODO
+    # WAFileLibrary deployFiles.
+  end
 
 
 
