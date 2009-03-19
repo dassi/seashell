@@ -81,8 +81,8 @@ namespace :gemstone do
 
 
   desc 'Runs gslist on server and displays the information'
-  task :gslist do
-    run 'gslist -v'
+  task :status do
+    run 'gslist -vx'
   end
   
   # Will install Gemstone on a fresh server
@@ -96,26 +96,37 @@ end
 
 
 # Executes smalltalk code on gemstone via topaz
-# You can use the implicit variable "output" to set content which is return to seashell
-def run_gs(smalltalk_code)
+# In your Smalltalk code you can use the implicit variable "output" to set content which is returned to seashell
+def run_gs(smalltalk_code, commit = true)
   
   output_filename = 'seashell_output.txt'
 
+  # Remove possible whitespaces at begin and end od script
   smalltalk_code.strip!
   
-  # For correct syntax we need a "." at the end of the given embedded Smalltalk code
+  # For correct syntax we need a "." at the end of the given Smalltalk code piece (which will be embedded in some utility Smalltalk code)
   if smalltalk_code[-1,1] != '.'
     smalltalk_code << '.'
   end
 
   # Manipulate the first line, if it contains variable declarations of Smalltalk we need to inject our "output" variable
+  # OPTIMIZE: Is there no String#lines ?! Do I really have to use this StringIO-workaround?!
   if StringIO.new(smalltalk_code).readlines.first =~ /^.*\|.*\|.*$/
+    # Inject out "output" variable name in the declaration
     smalltalk_code.gsub!(/^.*\|(.*)\|.*$/, '| \1 output |')
-    declaration = nil
+    declaration_code = nil
   else
-    declaration = '| output |'
+    declaration_code = '| output |'
+  end
+  
+  # Automatically add a commit command?
+  if commit
+    commit_code = 'System commitTransaction.'
+  else
+    commit_code = nil
   end
 
+  # Important! Don't indent the following script, as the "%" sign needs to come without indentation for topaz!
   topaz_script = <<-TEXT
 set gemstone #{stone}
 set username #{gemstone_user}
@@ -123,8 +134,9 @@ set password #{gemstone_password}
 login
 output push topaz_script.log
 printit
-#{declaration}
+#{declaration_code}
 #{smalltalk_code}
+#{commit_code}
 (GsFile openWriteOnServer: '#{output_filename}')
   nextPutAll: output asString;
   close.
@@ -138,6 +150,7 @@ TEXT
   begin
     run "topazl -q -i < topaz_script.tmp > /dev/null"
   rescue CommandError
+    # On a topaz error exit code, we display the output of topaz (which has been logged in the background)
     trace 'Topaz error!!!'
     run 'cat topaz_script.log'
     raise
@@ -156,6 +169,6 @@ TEXT
   run "rm topaz_script.tmp #{output_filename}"
 
   # Return the value coming from topaz
-  return output
+  output
 
 end

@@ -27,7 +27,7 @@ namespace :info do
     desc 'Show the currently installed version'
     task :installed do
       script = "output := (MCPackage named: '#{monticello_package_name}') workingCopy description"
-      version = run_gs(script)
+      version = run_gs(script, false)
       say "Current installed version is: #{version}"
     end
 

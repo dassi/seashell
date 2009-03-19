@@ -13,37 +13,50 @@
 
 namespace :deploy do
 
+
+  # Loads the version +monticello_file+ from the repository
+  def install_monticello_version(monticello_file)
+
+    monticello_load_script = <<-SMALLTALK
+      | httpRepository version rg |
+      MCPlatformSupport autoMigrate: true.
+      httpRepository := MCHttpRepository
+          location: '#{monticello_repository_url}'
+          user: '#{monticello_repository_user}'
+          password: '#{monticello_repository_password}'.
+      "pick up the repository if it's already
+       in default repository group"
+      MCRepositoryGroup default repositoriesDo: [:rep |
+          rep = httpRepository ifTrue: [ httpRepository := rep ]].
+      version := httpRepository loadVersionFromFileNamed: '#{monticello_file}'.
+      version load.
+      rg := version workingCopy repositoryGroup.
+      rg addRepository: httpRepository.
+      System commitTransaction.
+    SMALLTALK
+
+    # Debug: Show the script:
+    # Capistrano::CLI.ui.say(monticello_load_script)
+
+    if Capistrano::CLI.ui.agree("Really load version #{monticello_file}?")
+      run_gs(monticello_load_script)
+      say "Version #{monticello_file} loaded"
+    else
+      say "Loading aborted"
+    end
+  end
+
   desc 'Deploy a version from monticello'
   task :default do
     # Ask for Monticello version (show only latest 50)
     monticello_file = Capistrano::CLI.ui.choose(*get_monticello_versions[0..50])
-
-    # Load version with Monticello
-    monticello_load_script = <<-SMALLTALK
-    | httpRepository version rg |
-    MCPlatformSupport autoMigrate: false.
-    httpRepository := MCHttpRepository
-        location: '#{monticello_repository_url}'
-        user: '#{monticello_repository_user}'
-        password: '#{monticello_repository_password}'.
-    "pick up the repository if it's already
-     in default repository group"
-    MCRepositoryGroup default repositoriesDo: [:rep |
-        rep = httpRepository ifTrue: [ httpRepository := rep ]].
-    version := httpRepository loadVersionFromFileNamed: '#{monticello_file}'.
-    version load.
-    rg := version workingCopy repositoryGroup.
-    rg addRepository: httpRepository.
-    MCPlatformSupport autoMigrate: true.
-    System commitTransaction.
-SMALLTALK
-
-    # Debug, show the script:
-    Capistrano::CLI.ui.say(monticello_load_script)
-
-    if Capistrano::CLI.ui.ask("Really load version #{monticello_file}?")
-      run_gs(monticello_load_script)
-    end
+    install_monticello_version(monticello_file)
+  end
+  
+  desc 'Deploy the latest version from monticello repository'
+  task :latest do
+    monticello_file = get_monticello_versions.first
+    install_monticello_version(monticello_file)
   end
 
 
@@ -53,7 +66,15 @@ SMALLTALK
     # WAFileLibrary deployFiles.
   end
 
-
+  desc 'Switches the application to deployment Mode'
+  task :set_deployment_mode do
+                 
+    script = <<-SMALLTALK
+      (WADispatcher default entryPointAt: 'busana') preferenceAt: #deploymentMode put: true.
+    SMALLTALK
+    
+    run_gs(script)
+  end
 
   # Tasks related to setting up the environment
   namespace :setup do
@@ -113,21 +134,21 @@ def get_monticello_versions
   
   # Get versions from monticello and list them in a file
   smalltalk_code = <<-SMALLTALK
-      | httpRepository versions myFile |
-      MCPlatformSupport autoMigrate: false.
-      httpRepository := MCHttpRepository
-          location: '#{monticello_repository_url}'
-          user: '#{monticello_repository_user}'
-          password: '#{monticello_repository_password}'.
-      versions := httpRepository readableFileNames.
-      myFile := GsFile openWriteOnServer: 'monticello_versions.txt'.
-      versions do: [:each | 
-          myFile nextPutAll: each.
-          myFile cr.].
-      myFile close.
-SMALLTALK
+    | httpRepository versions myFile |
+    MCPlatformSupport autoMigrate: false.
+    httpRepository := MCHttpRepository
+        location: '#{monticello_repository_url}'
+        user: '#{monticello_repository_user}'
+        password: '#{monticello_repository_password}'.
+    versions := httpRepository readableFileNames.
+    myFile := GsFile openWriteOnServer: 'monticello_versions.txt'.
+    versions do: [:each | 
+        myFile nextPutAll: each.
+        myFile cr.].
+    myFile close.
+  SMALLTALK
 
-  run_gs(smalltalk_code)
+  run_gs(smalltalk_code, false)
 
   # Download the file with the list
   get output_filename, output_filename
