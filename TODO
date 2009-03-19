@@ -11,4 +11,6 @@ Wish and todo list
 ==================
 
 - Write tasks for monit or any other monitoring tool
-- Better handling of secure stored passwords.
+- Better handling of secure stored passwords.                   
+- Add tests. What's the best method for testing cap tasks?!
+- Possibility to talk to the local Squeak development evironment, to get information for deployment.
