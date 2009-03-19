@@ -42,6 +42,7 @@ end
 
 # Monticello repository
 set :monticello_repository_url, 'http://www.yourserver.com/mySeasideApp'
+set :monticello_package_name, 'XYPackage'
 set :monticello_repository_user, 'squeak'
 set :monticello_repository_password do
   # Capistrano::CLI.password_prompt("Password for Monticello user #{monticello_repository_user}: ")
