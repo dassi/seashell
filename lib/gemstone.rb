@@ -39,7 +39,7 @@ namespace :gemstone do
   namespace :stone do
     desc 'Start Gemstone stone'
     task :start do
-      run 'startGemstone'
+      run "cd #{path_application} && startGemstone"
     end
 
     desc 'Stop Gemstone stone'
@@ -64,7 +64,7 @@ namespace :gemstone do
   namespace :gems do
     desc 'Start the seaside gems cluster'
     task :start do
-      run 'runSeasideGems start'
+      run "cd #{path_application} && runSeasideGems start"
     end
 
     desc 'Stop the seaside gems cluster'
@@ -74,18 +74,32 @@ namespace :gemstone do
 
     desc 'Restart the seaside gems cluster'
     task :restart do
-      run 'runSeasideGems restart'
+      run "cd #{path_application} && runSeasideGems restart"
     end
 
   end
 
+  # Tasks related to GLASS
+  namespace :glass do
 
-  desc 'Runs gslist on server and displays the information'
+    desc 'Updates GLASS package'
+    task :update do
+      glass_repository_url = 'http://seaside.gemstone.com/ss/GLASS'
+      available_versions = get_monticello_versions(glass_repository_url, '', '')
+      available_glass_versions = available_versions.select { |v| v.include?('GLASS') }
+      monticello_file = Capistrano::CLI.ui.choose(*available_glass_versions[0..50])
+      install_monticello_version(monticello_file, glass_repository_url, '', '')
+    end
+      
+  end
+
+  desc 'Displays the status information'
   task :status do
     run 'gslist -vx'
   end
   
   # Will install Gemstone on a fresh server
+  # TODO!
   task :install do
     # OK, this is not tested! And most likely needs more stuff to really work...
     run 'wget http://seaside.gemstone.com/scripts/installGemstone2.3-Linux.sh'

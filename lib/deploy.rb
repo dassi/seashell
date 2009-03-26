@@ -14,69 +14,65 @@
 namespace :deploy do
 
 
-  # Loads the version +monticello_file+ from the repository
-  def install_monticello_version(monticello_file)
-
-    monticello_load_script = <<-SMALLTALK
-      | httpRepository version rg |
-      MCPlatformSupport autoMigrate: true.
-      httpRepository := MCHttpRepository
-          location: '#{monticello_repository_url}'
-          user: '#{monticello_repository_user}'
-          password: '#{monticello_repository_password}'.
-      "pick up the repository if it's already
-       in default repository group"
-      MCRepositoryGroup default repositoriesDo: [:rep |
-          rep = httpRepository ifTrue: [ httpRepository := rep ]].
-      version := httpRepository loadVersionFromFileNamed: '#{monticello_file}'.
-      version load.
-      rg := version workingCopy repositoryGroup.
-      rg addRepository: httpRepository.
-      System commitTransaction.
-    SMALLTALK
-
-    # Debug: Show the script:
-    # Capistrano::CLI.ui.say(monticello_load_script)
-
-    if Capistrano::CLI.ui.agree("Really load version #{monticello_file}?")
-      run_gs(monticello_load_script)
-      say "Version #{monticello_file} loaded"
-    else
-      say "Loading aborted"
-    end
+  def ensure_webserver_can_read_static_files
+    sudo "chgrp -R www-data #{path_web_root}"
   end
 
   desc 'Deploy a version from monticello'
   task :default do
     # Ask for Monticello version (show only latest 50)
-    monticello_file = Capistrano::CLI.ui.choose(*get_monticello_versions[0..50])
-    install_monticello_version(monticello_file)
+    available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password)
+    monticello_file = Capistrano::CLI.ui.choose(*available_versions[0..50])
+    install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
   end
   
   desc 'Deploy the latest version from monticello repository'
   task :latest do
-    monticello_file = get_monticello_versions.first
-    install_monticello_version(monticello_file)
+    available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password)
+    monticello_file = available_versions.first
+    install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
   end
 
 
-  desc 'Deploys the static files from your seaside FileLibrary to disk'
+  desc 'Deploys the static files to disk. Taken from your applications FileLibrary classes'
   task :write_file_libraries_to_disk do
-    # TODO
-    # WAFileLibrary deployFiles.
+    script = ''
+    for component, entry_point_name in entry_points
+      script << "(WADispatcher default entryPointAt: '#{entry_point_name}') writeLibrariesToDisk.\n"
+    end
+    
+    run_gs(script, :commit => false, :working_dir => "#{path_web_root}/seaside/files")
+
+    # Change file permission, so that web server can read them
+    ensure_webserver_can_read_static_files
+
   end
 
   desc 'Switches the application to deployment Mode'
   task :set_deployment_mode do
                  
-    script = <<-SMALLTALK
-      (WADispatcher default entryPointAt: 'busana') preferenceAt: #deploymentMode put: true.
-    SMALLTALK
+    script = ''
+    for component, entry_point_name in entry_points
+      script << "(WADispatcher default entryPointAt: '#{entry_point_name}') preferenceAt: #deploymentMode put: true.\n"
+    end
     
     run_gs(script)
   end
+   
+  desc 'Register your seaside entry points'
+  task :register do
+    script = ''
+    for component, entry_point_name in entry_points
+      script << "#{component} registerAsApplication: '#{entry_point_name}'.\n"
+    end
 
+    run_gs(script)
+  end
+
+
+  #
   # Tasks related to setting up the environment
+  #
   namespace :setup do
 
     desc 'Sets up the folder structure for the project'
@@ -84,16 +80,24 @@ namespace :deploy do
       create_folders
       copy_initial_repository
       create_switch_script
+      create_topazini_file
     end
 
     # Create used folders
     task :create_folders do
-      run "mkdir -p #{path_application} #{path_data} #{path_data}/backups #{path_application}/logs #{path_application}/web_root"
+      run "mkdir -p #{path_application} #{path_data} #{path_data}/backups #{path_application}/logs"
       run "mkdir -p /etc/lighttpd/seaside_applications"
+
+      run "mkdir -p #{path_web_root}"
+      run "mkdir -p #{path_web_root}/seaside/files"
+
+      ensure_webserver_can_read_static_files
+
     end
 
     task :copy_initial_repository do
-      run "cp -n /opt/gemstone/product/bin/extent0.seaside.dbf #{path_data}/extent0.dbf"
+      run "cp /opt/gemstone/product/bin/extent0.seaside.dbf #{path_data}/extent0.dbf"
+      run "chmod u+w #{path_data}/extent0.dbf"
     end
 
     # Creates convenience shell script for switching projects when working on the server
@@ -104,6 +108,16 @@ namespace :deploy do
       end
 
       put switch_shell_script, "#{path_application}/switch_environment"
+    end
+    
+    task :create_topazini_file do
+      topazini = <<-TOPAZ
+set gemstone #{stone}
+set username #{gemstone_user}
+set password #{gemstone_password}
+TOPAZ
+
+      put topazini, "#{path_application}/.topazini"
     end
 
     desc 'Checks all kind of stuff on the server, to ensure things will work.'
