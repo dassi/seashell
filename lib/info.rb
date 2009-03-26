@@ -13,6 +13,14 @@
 
 namespace :info do
 
+
+  def installed_version_of_package(package_name)
+    script = "output := (MCPackage named: '#{package_name}') workingCopy description"
+    version = run_gs(script, :commit => false)
+    version
+  end
+  
+  
   desc 'Shows the environment of the server which is active when capistrano does work'
   task :env do
     run 'env | sort'
@@ -26,8 +34,7 @@ namespace :info do
 
     desc 'Show the currently installed version'
     task :installed do
-      script = "output := (MCPackage named: '#{monticello_package_name}') workingCopy description"
-      version = run_gs(script, false)
+      version = installed_version_of_package(monticello_package_name)
       say "Current installed version is: #{version}"
     end
 
@@ -37,6 +44,22 @@ namespace :info do
       say "Newest version is: #{version}"
     end
     
+  end
+  
+  namespace :seaside do
+    desc 'Show the installed seaside version'
+    task :version do
+      version = installed_version_of_package('Seaside2')
+      say "Current installed version of Seaside is: #{version}"
+    end
+  end
+  
+  namespace :glass do
+    desc 'Show the installed GLASS version'
+    task :version do
+      version = installed_version_of_package('GLASS')
+      say "Current installed version of GLASS is: #{version}"
+    end
   end
   
 
