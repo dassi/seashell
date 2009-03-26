@@ -127,34 +127,3 @@ namespace :deploy do
 end
 
 
-# Gets a list of available monticello versions (via topaz)
-def get_monticello_versions
-
-  output_filename = 'monticello_versions.txt'
-  
-  # Get versions from monticello and list them in a file
-  smalltalk_code = <<-SMALLTALK
-    | httpRepository versions myFile |
-    MCPlatformSupport autoMigrate: false.
-    httpRepository := MCHttpRepository
-        location: '#{monticello_repository_url}'
-        user: '#{monticello_repository_user}'
-        password: '#{monticello_repository_password}'.
-    versions := httpRepository readableFileNames.
-    myFile := GsFile openWriteOnServer: 'monticello_versions.txt'.
-    versions do: [:each | 
-        myFile nextPutAll: each.
-        myFile cr.].
-    myFile close.
-  SMALLTALK
-
-  run_gs(smalltalk_code, false)
-
-  # Download the file with the list
-  get output_filename, output_filename
-
-  versions = File.readlines(output_filename, "\n").collect{ |s| s.strip }
-  File.delete(output_filename)
-
-  versions
-end
