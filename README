@@ -7,11 +7,28 @@
 # Licence: MIT (see LICENSE file)
 #                                          
 
-***************************************************************************************************
-!!! Important !!! Remove the line GEMS="9001 9002 9003" from the file runSeasideGems on your server.
-The GEMS environment variable will be automatically controlled by SeaShell.
-***************************************************************************************************
 
+How to install
+==============
+!!! Important !!! Remove the line GEMS="9001 9002 9003" from the shell script file 'runSeasideGems' on your server.
+(usually located at /opt/gemstone/product/seaside/bin/runSeasideGems)
+The GEMS environment variable will be automatically controlled by SeaShell.
+
+- Get SeaShell as source from http://github.com/dassi/seashell. (Easy to install ruby-gem is planned, once the code is stable)
+- Put everything in a folder "deployment" (or similar) at your project folder on your development machine.
+- Depends on ruby-gem "capistrano", version >=2.5.5. To install capistrano, run this on your shell: "sudo gem install capistrano"
+
+How to configure
+================
+- Copy the file config.example.rb to config.rb and change config.rb to yours needs.
+- Optional: Add a file on top level called tasks.rb, which will hold your project specific additional tasks. See examples/tasks.rb for hints.
+
+How to use
+==========
+- Open a shell in the folder you have put SeaShell
+- Run "cap -T" on the shell to get a list of tasks and their description
+- Run a task, for example "cap info:env", and enjoy your deployment work!
+     
 Remarks
 =======
 - Make shure your server does NOT load your login profile, when connecting with a non-login shell (Some systems do, I heard! Ubuntu doesn't.).
@@ -22,20 +39,8 @@ Remarks
 - Include the vhost configuration files in the lighttpd.conf with this line at the end of the file:
   include_shell "cat seaside_applications/*.conf"
 - Tested with Gemstone 2.3.1, running on a 256MB slicehost with lighttpd as frontend web server.
+- Not meant to work on, with, over, under, on top, left of, outside or near of Windows. Sorry. Hygiene.
           
-How to install
-==============
-- get it as (ruby-)gem "dassi-seashell" from github.com (if available already) or get it directly as source from github.com
-- Put everything in a folder "deployment" (or similar) at your project folder on your development machine.
-- Depends on (ruby-)gem "capistrano", version >=2.5.5. To install capistrano, run this on your shell: "sudo gem install capistrano"
-
-How to use
-==========
-- Open a shell in your deployment subfolder (probably named "deployment")
-- Fill in some configurations in the file config.rb
-- Run "cap -T" on the shell to get a list of tasks and their description
-- Optional: Add a file on top level called tasks.rb, which will hold your project specific additional tasks.
-     
 Links
 =====
 - Read http://programminggems.wordpress.com/2008/09/05/setting-up-glass-on-slicehost/ for installation example of the Gemstone system on a slicehost server.
