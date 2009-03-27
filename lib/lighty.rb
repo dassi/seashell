@@ -28,6 +28,11 @@ namespace :lighty do
     sudo '/etc/init.d/lighttpd stop'
   end
 
+  desc 'Reload lighttpd configuration'
+  task :reload do
+    sudo '/etc/init.d/lighttpd reload'
+  end
+
   desc 'Creates the lighty configuration files on the server'
   task :setup do
 
