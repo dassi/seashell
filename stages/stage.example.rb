@@ -8,7 +8,7 @@
 #                                          
 
 ###################################################################################################
-# Project configuration (Change for your needs)
+# Project configuration for a stage (Change for your needs)
 #
 
 # Name of the application (No whitespace, no special characters!)

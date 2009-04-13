@@ -85,7 +85,7 @@ namespace :deploy do
 
     # Create used folders
     task :create_folders do
-      run "mkdir -p #{path_application} #{path_data} #{path_data}/backups #{path_application}/logs"
+      run "mkdir -p #{path_application} #{path_data} #{path_backups} #{path_application}/logs"
       run "mkdir -p /etc/lighttpd/seaside_applications"
 
       run "mkdir -p #{path_web_root}"

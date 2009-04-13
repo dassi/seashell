@@ -11,15 +11,21 @@
 # Generic configurations file
 #
 
-# Some helper variables
-set :path_application, "#{path_base}/applications/#{application}"
-set :path_data, "#{path_application}/data"
-set :path_web_root, "#{path_application}/web_root"
-set :gem_ports, (gems_start_port..(gems_start_port + gems_count - 1)).to_a
-
-if not exists?(:stone)
-  set :stone, application
+# Sets a variable only if not already set.
+def default_set(var_name, *args)
+  if not exists?(var_name.to_sym)
+    set var_name.to_sym, *args
+  end
 end
+
+# Some helper variables
+default_set :path_application, "#{path_base}/applications/#{application}"
+default_set :path_data, "#{path_application}/data"
+default_set :path_backups, "#{path_data}/backups"
+default_set :path_web_root, "#{path_application}/web_root"
+default_set :stone, application
+
+set :gem_ports, (gems_start_port..(gems_start_port + gems_count - 1)).to_a
 
 # set capistrano hostname for the "app" role
 role :app, host

@@ -7,14 +7,25 @@
 # Licence: MIT (see LICENSE file)
 #                                          
 
-# Load project configuration
-load 'config.rb'
+# Load stages configuration
+# TODO: Read stage names automatically from files in that directory
+set :stages, %w(production development)
+set :default_stage, 'development'
+set :stage_dir, 'stages'
+require 'capistrano/ext/multistage'
+       
+# Implicitly load the common config file after loading stage configs
+for stage_name in stages
+  after stage_name do
+    load 'lib/config.rb'
+  end
+end    
+
 
 load 'tasks.rb' if File.exists?('tasks.rb')
 
 # Load tasks from libraries
 load 'lib/helpers.rb'
-load 'lib/config.rb'
 load 'lib/seashell.rb'
 load 'lib/lighty.rb'
 load 'lib/gemstone.rb'
