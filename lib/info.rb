@@ -46,13 +46,6 @@ namespace :info do
     
   end
   
-  namespace :seaside do
-    desc 'Show the installed seaside version'
-    task :version do
-      version = installed_version_of_package('Seaside2')
-      say "Current installed version of Seaside is: #{version}"
-    end
-  end
   
   namespace :glass do
     desc 'Show the installed GLASS version'
