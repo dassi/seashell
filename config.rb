@@ -1,5 +1,5 @@
 # Include stages functionality from capistrano
-set :stages, %w(productive development)
+set :stages, %w(production development)
 set :default_stage, 'development'
 set :stage_dir, 'stages'
 require 'capistrano/ext/multistage'
