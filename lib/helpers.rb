@@ -95,7 +95,6 @@ def install_monticello_version(file, repository_url, repository_user, repository
     version load.
     rg := version workingCopy repositoryGroup.
     rg addRepository: httpRepository.
-    System commitTransaction.
   SMALLTALK
 
   # Debug: Show the script:
@@ -117,6 +116,8 @@ def run_gs(smalltalk_code, options = {})
   output_filename = 'seashell_output.txt'
   working_dir = options[:working_dir] || path_application
 
+  options[:commit] ||= true
+  
   # Remove possible whitespaces at begin and end od script
   smalltalk_code.strip!
   
