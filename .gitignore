@@ -1,4 +1,3 @@
 /tasks.rb
-/config.rb
 stages/development.rb
 stages/production.rb
