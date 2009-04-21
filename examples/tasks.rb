@@ -10,7 +10,7 @@ namespace :my_tasks do
 
   desc 'Just an example...'
   task :calculate do
-    say('Calculating 3 + 5 by Smalltalk results in: ' + run_gs('output := 3 + 5', false))
+    say('Calculating 3 + 5 by Smalltalk results in: ' + run_gs('output := 3 + 5', :commit => false))
   end
   
   # Nested namespace
