@@ -42,7 +42,7 @@ end
 
 
 # Gets a list of available monticello versions (via topaz)
-def get_monticello_versions(repository_url, repository_user, repository_password)
+def get_monticello_versions(repository_url, repository_user, repository_password, exclude_package_prefix = nil, include_package_prefix = nil)
 
   output_filename = "monticello_versions.txt"
   output_filepath_server = "#{path_application}/#{output_filename}"
@@ -69,6 +69,14 @@ def get_monticello_versions(repository_url, repository_user, repository_password
 
   # Read in the version names from the text file
   versions = File.readlines(output_filename, "\n").collect{ |s| s.strip }
+  
+  # Optionally filter out package names
+  if include_package_prefix
+    versions.reject! { |v| not (v[0, include_package_prefix.size] == include_package_prefix) }
+  end
+  if exclude_package_prefix
+    versions.reject! { |v| v[0, exclude_package_prefix.size] == exclude_package_prefix }
+  end
 
   # Delete the temporary transfer files
   run "rm #{output_filepath_server}"

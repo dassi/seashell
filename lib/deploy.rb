@@ -21,15 +21,26 @@ namespace :deploy do
   desc 'Deploy a version from monticello'
   task :default do
     # Ask for Monticello version (show only latest 50)
-    available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password)
+    available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password, nil, monticello_package_name)
     monticello_file = Capistrano::CLI.ui.choose(*available_versions[0..50])
     install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
+    register
+    write_file_libraries_to_disk
+    set_deployment_mode
   end
   
   desc 'Deploy the latest version from monticello repository'
   task :latest do
-    available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password)
+    available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password, nil, monticello_package_name)
     monticello_file = available_versions.first
+    install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
+  end
+
+  desc 'Deploy any other package in the repository of the application'
+  task :package do
+    package_name = ask('Package name?')
+    available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password, monticello_package_name, package_name)
+    monticello_file = Capistrano::CLI.ui.choose(*available_versions)
     install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
   end
 
