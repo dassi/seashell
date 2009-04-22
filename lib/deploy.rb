@@ -15,11 +15,19 @@ namespace :deploy do
 
 
   def ensure_webserver_can_read_static_files
-    sudo "chgrp -R www-data #{path_web_root}"
+    # "exit 0" is a cheap trick to ignore errors.
+    # TODO: Better handling of "no permission" when doing chgrp
+    # run "chgrp -fR www-data #{path_web_root}; exit 0" 
+    
+    # Alternatively using this, for the moment:
+    run "chmod -R o+r #{path_web_root}" 
   end
 
   desc 'Deploy a version from monticello'
   task :default do
+    # TODO? Make backup snapshot before deploying?
+    # backup
+
     # Ask for Monticello version (show only latest 50)
     available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password, nil, monticello_package_name)
     monticello_file = Capistrano::CLI.ui.choose(*available_versions[0..50])
@@ -92,12 +100,13 @@ namespace :deploy do
       copy_initial_repository
       create_switch_script
       create_topazini_file
+      say("Your fresh Gemstone/Seaside application directory has been setup at #{path_application}. Now go on and surf the seaside!")
     end
 
     # Create used folders
     task :create_folders do
       run "mkdir -p #{path_application} #{path_data} #{path_backups} #{path_application}/logs"
-      run "mkdir -p /etc/lighttpd/seaside_applications"
+      run "mkdir -p #{path_lighty_application_configs}" if exists?(:path_lighty_application_configs)
 
       run "mkdir -p #{path_web_root}"
       run "mkdir -p #{path_web_root}/seaside/files"
@@ -131,7 +140,7 @@ TOPAZ
       put topazini, "#{path_application}/.topazini"
     end
 
-    desc 'Checks all kind of stuff on the server, to ensure things will work.'
+    # desc 'Checks all kind of stuff on the server, to ensure things will work.'
     task :check do
       # TODO, check that:
       # - SHR_PAGE_CACHE_SIZE_KB should be half of the RAM, but never bigger! see in /opt/gemstone/product/seaside/data/system.conf
