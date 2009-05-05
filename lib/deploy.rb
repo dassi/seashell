@@ -27,18 +27,22 @@ namespace :deploy do
   task :default do
     # TODO? Make backup snapshot before deploying?
     # backup
+    
+    # TODO: Check, if stone is running. Or even start it implicitly?
 
     # Ask for Monticello version (show only latest 50)
     available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password, nil, monticello_package_name)
     monticello_file = Capistrano::CLI.ui.choose(*available_versions[0..50])
     install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
+    find_and_execute_task('seaside:flush_caches')
     register
     write_file_libraries_to_disk
     set_deployment_mode
+    say("Your application #{monticello_file} has been deployed.")
   end
   
-  desc 'Deploy the latest version from monticello repository'
-  task :latest do
+  desc 'Update to the latest version from monticello repository'
+  task :update_to_latest do
     available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password, nil, monticello_package_name)
     monticello_file = available_versions.first
     install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
