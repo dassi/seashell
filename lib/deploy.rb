@@ -33,6 +33,7 @@ namespace :deploy do
     monticello_file = Capistrano::CLI.ui.choose(*available_versions[0..50])
     install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
     register
+    find_and_execute_task('seaside:remove_seaside_path')
     write_file_libraries_to_disk
     set_deployment_mode
   end
