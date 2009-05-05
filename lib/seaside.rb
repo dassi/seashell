@@ -49,6 +49,11 @@ namespace :seaside do
     #   preferenceAt: #password put: 'new password'.    
   end
   
+  desc 'Removes the standard URI path prefix "/seaside"'
+  task :remove_seaside_path do
+    run_gs("WADispatcher default setName: ''. WADispatcher default defaultName: '#{default_entry_point}'.")
+  end
+  
   
   namespace :info do
 

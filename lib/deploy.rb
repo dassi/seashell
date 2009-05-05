@@ -36,6 +36,7 @@ namespace :deploy do
     install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
     find_and_execute_task('seaside:flush_caches')
     register
+    find_and_execute_task('seaside:remove_seaside_path')
     write_file_libraries_to_disk
     set_deployment_mode
     say("Your application #{monticello_file} has been deployed.")

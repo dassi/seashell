@@ -51,7 +51,8 @@ set :gems_count, 3
 
 # Configure your seaside entry points here, as a hash with {YourRootComponent => 'entry-point-name', ...}.
 # Your application will be reachable at /seaside/entry-point-name
-set :entry_points, {'MPApplicationComponent' => 'mywonderfulapp'}
+set :entry_points, {'MPApplicationComponent' => 'mywonderfulapp', 'MPAdminApplicationComponent' => 'admin'}
+set :default_entry_point, 'mywonderfulapp'
 
 
 # The following variables normally are set by default later, if not preset here. If needed you can override them here:
