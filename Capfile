@@ -9,7 +9,8 @@
 
 # Load stages configuration
 # TODO: Read stage names automatically from files in that directory
-set :stages, %w(production development)
+set :stages, Dir["stages/*.rb"].map { |f| File.basename(f, ".rb") }
+# set :stages, %w(production development)
 set :default_stage, 'development'
 set :stage_dir, 'stages'
 require 'capistrano/ext/multistage'

@@ -1,3 +1,2 @@
 /tasks.rb
-stages/development.rb
-stages/production.rb
+stages/*.rb
