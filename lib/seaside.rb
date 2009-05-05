@@ -15,7 +15,7 @@ namespace :seaside do
 
   desc 'Flush caches (Magritte, ...)'
   task :flush_caches do
-    run_gs('MADescriptionBuilder default flush. MANamedBuilder default flush.')
+    run_gs('MADescriptionBuilder default flush.')
   end
 
   desc 'Deletes all sessions'
