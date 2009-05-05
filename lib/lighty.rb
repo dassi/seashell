@@ -45,13 +45,13 @@ namespace :lighty do
     for domain in domains
       lighty_config << <<-TEXT
 $HTTP["host"] == "#{domain}" {
-  $HTTP["url"] =~ "^/seaside/files/" { 
+  $HTTP["url"] =~ "^/files/" { 
     server.document-root = "#{path_web_root}/"
-  } else $HTTP["url"] =~ "^/seaside" { 
+  } else $HTTP["url"] =~ "^/" { 
     server.document-root = "#{path_web_root}/"
     #server.errorlog = "#{path_application}/logs/lighty_error_log"
     #accesslog.filename = "#{path_application}/logs/access_log"
-    fastcgi.server = ( "/seaside" => (
+    fastcgi.server = ( "" => (
 TEXT
 
 

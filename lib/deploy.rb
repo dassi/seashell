@@ -65,7 +65,7 @@ namespace :deploy do
       script << "(WADispatcher default entryPointAt: '#{entry_point_name}') writeLibrariesToDisk.\n"
     end
     
-    run_gs(script, :commit => false, :working_dir => "#{path_web_root}/seaside/files")
+    run_gs(script, :commit => false, :working_dir => "#{path_web_root}/files")
 
     # Change file permission, so that web server can read them
     ensure_webserver_can_read_static_files
@@ -114,7 +114,7 @@ namespace :deploy do
       run "mkdir -p #{path_lighty_application_configs}" if exists?(:path_lighty_application_configs)
 
       run "mkdir -p #{path_web_root}"
-      run "mkdir -p #{path_web_root}/seaside/files"
+      run "mkdir -p #{path_web_root}/files"
 
       ensure_webserver_can_read_static_files
 

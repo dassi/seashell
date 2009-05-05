@@ -50,8 +50,10 @@ set :gems_start_port, 10001
 set :gems_count, 3
 
 # Configure your seaside entry points here, as a hash with {YourRootComponent => 'entry-point-name', ...}.
-# Your application will be reachable at /seaside/entry-point-name
+# Your application will be reachable at /entry-point-name
 set :entry_points, {'MPApplicationComponent' => 'mywonderfulapp', 'MPAdminApplicationComponent' => 'admin'}
+
+# The default entry point to redirect to, if browsing at root URL
 set :default_entry_point, 'mywonderfulapp'
 
 
