@@ -69,7 +69,7 @@ namespace :gemstone do
 
     desc 'Stop the seaside gems cluster'
     task :stop do
-      run 'runSeasideGems stop'
+      run "cd #{path_application} && runSeasideGems stop"
     end
 
     desc 'Restart the seaside gems cluster'
