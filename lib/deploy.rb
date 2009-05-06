@@ -18,9 +18,14 @@ namespace :deploy do
     # "exit 0" is a cheap trick to ignore errors.
     # TODO: Better handling of "no permission" when doing chgrp
     # run "chgrp -fR www-data #{path_web_root}; exit 0" 
-    
+
     # Alternatively using this, for the moment:
     run "chmod -R o+r #{path_web_root}" 
+    
+    # By default the /opt/gemstone folder is not viewable by all. We need to change that, else the webserver can not serve files
+    # OPTIMIZE: This only makes sense, if path_web_root is a subfolder of path_base, which is the case for the default values of SeaShell.
+    run "chmod o+r,o+x #{path_base}" 
+    
   end
 
   desc 'Deploy a version from monticello'
@@ -30,10 +35,20 @@ namespace :deploy do
     
     # TODO: Check, if stone is running. Or even start it implicitly?
 
-    # Ask for Monticello version (show only latest 50)
-    available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password, nil, monticello_package_name)
-    monticello_file = Capistrano::CLI.ui.choose(*available_versions[0..50])
-    install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
+    # Build the list of all packages to load. The application itself, plus required packages.
+    package_names = [monticello_package_name]
+    if exists?(:required_packages) and required_packages.any?
+      package_names = required_packages + package_names
+    end
+
+    # TODO: Only load packages, if there are new versions available?
+    for package_name in package_names
+      # Ask for Monticello version (show only latest 20)
+      available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password, nil, package_name)
+      monticello_file = Capistrano::CLI.ui.choose(*available_versions[0..20])
+      install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
+    end
+
     find_and_execute_task('seaside:flush_caches')
     register
     find_and_execute_task('seaside:remove_seaside_path')
@@ -110,7 +125,7 @@ namespace :deploy do
 
     # Create used folders
     task :create_folders do
-      run "mkdir -p #{path_application} #{path_data} #{path_backups} #{path_application}/logs"
+      run "mkdir -p #{path_application} #{path_data} #{path_backups} #{path_logs}"
       run "mkdir -p #{path_lighty_application_configs}" if exists?(:path_lighty_application_configs)
 
       run "mkdir -p #{path_web_root}"
@@ -120,6 +135,8 @@ namespace :deploy do
 
     end
 
+    # Copies the Gemstone intial repository into the project folder
+    # OPTIMIZE: Make sure that this never destroys data. And shows a warning, if there is already data.
     task :copy_initial_repository do
       run "cp /opt/gemstone/product/bin/extent0.seaside.dbf #{path_data}/extent0.dbf"
       run "chmod u+w #{path_data}/extent0.dbf"

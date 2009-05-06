@@ -56,6 +56,10 @@ set :entry_points, {'MPApplicationComponent' => 'mywonderfulapp', 'MPAdminApplic
 # The default entry point to redirect to, if browsing at root URL
 set :default_entry_point, 'mywonderfulapp'
 
+# Required packages, which are not requirable by the application Monticello package itself
+# (Example: Platform specific code)
+set :required_packages, ['MPSomePackageOnlyForProductionMachine']
+
 
 # The following variables normally are set by default later, if not preset here. If needed you can override them here:
 # set :path_application, "#{path_base}/applications/#{application}"

@@ -87,7 +87,7 @@ namespace :gemstone do
       glass_repository_url = 'http://seaside.gemstone.com/ss/GLASS'
       available_versions = get_monticello_versions(glass_repository_url, '', '')
       available_glass_versions = available_versions.select { |v| v.include?('GLASS') }
-      monticello_file = Capistrano::CLI.ui.choose(*available_glass_versions[0..50])
+      monticello_file = Capistrano::CLI.ui.choose(*available_glass_versions[0..20])
       install_monticello_version(monticello_file, glass_repository_url, '', '')
     end
       

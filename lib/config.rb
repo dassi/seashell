@@ -20,6 +20,7 @@ end
 
 # Some helper variables
 default_set :path_application, "#{path_base}/applications/#{application}"
+default_set :path_logs, "#{path_application}/logs"
 default_set :path_data, "#{path_application}/data"
 default_set :path_backups, "#{path_data}/backups"
 default_set :path_web_root, "#{path_application}/web_root"
@@ -37,7 +38,7 @@ set :use_sudo, false
 set :default_environment, {
   'GEMSTONE' => path_gemstone,                                        # Path to the Gemstone product directory
   'GEMSTONE_USER' => user,                                            # Linux username of GemStone administrator
-  'GEMSTONE_LOGDIR' => path_data,                                     # Log dir
+  'GEMSTONE_LOGDIR' => path_logs,                                     # Log dir
   'GEMSTONE_NAME' => stone,                                           # Stone name
   'GEMSTONE_DATADIR' => path_data,                                    # Data dir
   'GEMSTONE_KEYFILE' => "#{path_seaside}/etc/gemstone.key",           # Path to the Gemstone Web Edition keyfile (Same for all applications!)
