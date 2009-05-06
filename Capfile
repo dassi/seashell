@@ -23,7 +23,6 @@ for stage_name in stages
 end    
 
 
-load 'tasks.rb' if File.exists?('tasks.rb')
 
 # Load tasks from libraries
 load 'lib/helpers.rb'
@@ -34,3 +33,5 @@ load 'lib/seaside.rb'
 load 'lib/deploy.rb'
 load 'lib/info.rb'
 
+# At last, load in project specific tasks, if any.
+load 'tasks.rb' if File.exists?('tasks.rb')
