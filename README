@@ -20,19 +20,19 @@ The GEMS environment variable will be automatically controlled by SeaShell.
 
 How to configure
 ================
-- Copy the file config.example.rb to config.rb and change config.rb to yours needs.
+- In the folder /stages: Copy the file stage.rb.example to somestage.rb and change it to your needs. (Examples: production.rb, demo.rb, development.rb)
 - Optional: Add a file on top level called tasks.rb, which will hold your project specific additional tasks. See examples/tasks.rb for hints.
 
 How to use
 ==========
 - Open a shell in the folder you have put SeaShell
 - Run "cap -T" on the shell to get a list of tasks and their description
-- Run a task, for example "cap info:env", and enjoy your deployment work!
+- Choose your stage and run a task, for example "cap production info:env". (In fact, for each of your stages there will be a task to switch to that stage. For example "production". You need to execute that stage-choosing task prior to any other task.)
      
 Remarks
 =======
 - Make shure your server does NOT load your login profile, when connecting with a non-login shell (Some systems do, I heard! Ubuntu doesn't.).
-  This potentialy could override some environment settings from the capistrano recipes.
+  This potentialy could override some environment settings from the SeaShell capistrano recipes.
 - Your applications are stored in /opt/gemstone/applications/<app_name>
 - Don't be confused by the name "gem". It is also used by ruby, not only by gemstone.
 - Remove the line GEMS="9001 9002 9003" from the file runSeasideGems on your server.
