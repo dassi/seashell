@@ -90,6 +90,36 @@ namespace :gemstone do
       monticello_file = Capistrano::CLI.ui.choose(*available_glass_versions[0..20])
       install_monticello_version(monticello_file, glass_repository_url, '', '')
     end
+    
+    desc 'updates GLASS, if its older than Version 187'
+    task :update_from_pre_187 do
+      # TODO: Run the following code. Only if version is pre GLASS.187, which is the case on a fresh GLASS 2.3.1 repository.
+
+      smalltalk = <<-SMALLTALK
+      | httpRepository version rg |
+      SystemChangeAnnouncement 
+          compileMethod: 'item: ignored' 
+          category: 'accessing'.
+      MCPlatformSupport autoMigrate: false.
+      httpRepository := MCHttpRepository
+          location: 'http://seaside.gemstone.com/ss/GLASS'
+          user: ''
+          password: ''.
+      "pick up the GLASS repository if it's already
+       in default repository group"
+      MCRepositoryGroup default repositoriesDo: [:rep |
+          rep = httpRepository ifTrue: [ httpRepository := rep ]].
+      version := httpRepository
+          loadVersionFromFileNamed: 'GLASS.230-dkh.187.mcz'.
+      version load.
+      rg := version workingCopy repositoryGroup.
+      rg addRepository: httpRepository.
+      MCPlatformSupport autoMigrate: true.
+      System commitTransaction.      
+SMALLTALK
+
+      run_gs(smalltalk_code)
+    end
       
   end
 
