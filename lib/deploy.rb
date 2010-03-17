@@ -20,7 +20,7 @@ namespace :deploy do
     sudo "chgrp -fR www-data #{path_web_root}; exit 0" 
 
     # Alternatively using this, for the moment:
-    run "chmod -R o+r #{path_web_root}" 
+    run "chmod -R o+r,o+x #{path_web_root}" 
     
     # By default the /opt/gemstone folder is not viewable by all. We need to change that, else the webserver can not serve files
     # OPTIMIZE: This only makes sense, if path_web_root is a subfolder of path_base, which is the case for the default values of SeaShell.
@@ -120,6 +120,7 @@ namespace :deploy do
       copy_initial_repository
       create_switch_script
       create_topazini_file
+      transfer_helper_files
       say("Your fresh Gemstone/Seaside application directory has been setup at #{path_application}. Now go on and surf the seaside!")
     end
 
@@ -160,6 +161,13 @@ set password #{gemstone_password}
 TOPAZ
 
       put topazini, "#{path_application}/.topazini"
+    end
+    
+    # Copies some files, helper scripts etc., which are held in the "static" folder locally
+    task :transfer_helper_files do
+      filepath = "#{path_application}/executeSmalltalk.sh"
+      put File.read('static/executeSmalltalk.sh'), filepath
+      run "chmod +x #{filepath}"
     end
 
     # desc 'Checks all kind of stuff on the server, to ensure things will work.'
