@@ -17,7 +17,7 @@ namespace :deploy do
   def ensure_webserver_can_read_static_files
     # "exit 0" is a cheap trick to ignore errors.
     # TODO: Better handling of "no permission" when doing chgrp
-    # run "chgrp -fR www-data #{path_web_root}; exit 0" 
+    sudo "chgrp -fR www-data #{path_web_root}; exit 0" 
 
     # Alternatively using this, for the moment:
     run "chmod -R o+r #{path_web_root}" 
