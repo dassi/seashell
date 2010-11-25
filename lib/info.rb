@@ -53,7 +53,61 @@ namespace :info do
       version = installed_version_of_package('GLASS')
       say "Current installed version of GLASS is: #{version}"
     end
+    
+    
+    desc 'Show the memory usage of the stone'
+    task :show_memory_usage do
+      code = <<-SMALLTALK
+| ar totalSize instances sizes infoArray |
+instances := IdentityDictionary new.
+sizes := IdentityDictionary new.
+totalSize := 0.
+System _generationScavenge_vmMarkSweep.
+ar := System _vmInstanceCounts: 3. "old space"
+ar associationsDo: [:assoc |
+  instances 
+      at: assoc key name "class"
+      put: (assoc value at: 1). "instance count"
+ totalSize := totalSize + (assoc value at: 2).
+  sizes 
+       at: assoc key name "class"
+      put: (assoc value at: 2) "total bytes" ].
+infoArray := { "label"
+       '75% full'.
+   "total size of objects in temporary object space"
+       totalSize.
+   "sorted list of classes and their total size in bytes"
+       sizes associations sortWithBlock: [:a :b | 
+           a value >= b value ].
+   "sorted list of clases and their instance counts"
+       instances associations sortWithBlock: [:a :b | 
+           a value >= b value ]}.
+output := infoArray printString.
+SMALLTALK
+
+      say(run_gs(code, :commit => false))
+
+    end
+
+    desc 'Show the memory usage of the stone'
+    task :show_memory_usage2 do
+      # Just for the actual session, so not really helpful!
+      code = <<-SMALLTALK
+output := System _tempObjSpacePercentUsed printString
+SMALLTALK
+
+      say(run_gs(code, :commit => false))
+
+    end
+    
   end
-  
+
+  namespace :seaside do
+    desc 'Show the installed seaside version'
+    task :version do
+      version = installed_version_of_package('Seaside2')
+      say "Current installed version of Seaside is: #{version}"
+    end
+  end
 
 end

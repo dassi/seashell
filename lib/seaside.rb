@@ -64,11 +64,6 @@ namespace :seaside do
       # (WADispatcher default entryPoints at: 'config') preferenceAt: #password.
     end
     
-    desc 'Show the installed seaside version'
-    task :version do
-      version = installed_version_of_package('Seaside2')
-      say "Current installed version of Seaside is: #{version}"
-    end
     
   end
   

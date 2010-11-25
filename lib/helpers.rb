@@ -121,8 +121,10 @@ end
 # In your Smalltalk code you can use the implicit variable "output" to set content which is returned to seashell
 def run_gs(smalltalk_code, options = {})
   
+  options[:working_dir] ||= path_application
+
   output_filename = 'seashell_output.txt'
-  working_dir = options[:working_dir] || path_application
+  working_dir = options[:working_dir]
 
   options[:commit] ||= true
   
@@ -158,6 +160,7 @@ set username #{gemstone_user}
 set password #{gemstone_password}
 login
 output push topaz_script.log
+iferr 1 stk
 printit
 #{declaration_code}
 #{smalltalk_code}
@@ -170,6 +173,30 @@ logout
 exit
 TEXT
 
+  run_topaz_script(topaz_script, options)
+
+  # Get the output text file and read it
+  begin
+    get "#{working_dir}/#{output_filename}", output_filename
+    output = File.read(output_filename)
+    File.delete(output_filename)
+  rescue
+    output = ''
+  end
+
+  # Clean up on server
+  run "cd #{working_dir} && rm #{output_filename}"
+
+  # Return the value coming from topaz
+  output
+
+end
+
+
+def run_topaz_script(topaz_script, options = {})
+
+  working_dir = options[:working_dir] || path_application
+  
   # Run smalltalk script via topaz, ignoring standard ini-file and quieting output of topaz.
   put topaz_script, "#{working_dir}/topaz_script.tmp"
   begin
@@ -181,24 +208,12 @@ TEXT
     raise
   end
 
-  # Get the output text file and read it
-  begin
-    get "#{working_dir}/#{output_filename}", output_filename
-    output = File.read(output_filename)
-    File.delete(output_filename)
-  rescue
-    output = ''
-  end
-
   if is_debug_mode
-    trace smalltalk_code
+    trace topaz_script
     run "cd #{working_dir} && cat topaz_script.log"
   end
 
   # Clean up on server
-  run "cd #{working_dir} && rm topaz_script.tmp topaz_script.log #{output_filename}"
-
-  # Return the value coming from topaz
-  output
-
+  run "cd #{working_dir} && rm topaz_script.tmp topaz_script.log"
+  
 end

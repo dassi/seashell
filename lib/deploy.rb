@@ -15,16 +15,19 @@ namespace :deploy do
 
 
   def ensure_webserver_can_read_static_files
-    # "exit 0" is a cheap trick to ignore errors.
-    # TODO: Better handling of "no permission" when doing chgrp
-    sudo "chgrp -fR www-data #{path_web_root}; exit 0" 
 
-    # Alternatively using this, for the moment:
-    run "chmod -R o+r,o+x #{path_web_root}" 
-    
-    # By default the /opt/gemstone folder is not viewable by all. We need to change that, else the webserver can not serve files
-    # OPTIMIZE: This only makes sense, if path_web_root is a subfolder of path_base, which is the case for the default values of SeaShell.
-    run "chmod o+r,o+x #{path_base}" 
+    # # "exit 0" is a cheap trick to ignore errors.
+    # # TODO: Better handling of "no permission" when doing chgrp
+    # sudo "chgrp -fR www-data #{path_web_root}; exit 0" 
+    # 
+    # # Alternatively using this, for the moment:
+    # run "chmod -R o+r,o+x #{path_web_root}" 
+    # 
+    # # By default the /opt/gemstone folder is not viewable by all. We need to change that, else the webserver can not serve files
+    # # OPTIMIZE: This only makes sense, if path_web_root is a subfolder of path_base, which is the case for the default values of SeaShell.
+    # run "chmod o+r,o+x #{path_base}" 
+
+    # Better: Run your webserver with appropriate permissions and user/group, so that GemStone AND Server will cooperate on the file system level.
     
   end
 

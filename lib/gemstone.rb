@@ -39,7 +39,7 @@ namespace :gemstone do
   namespace :stone do
     desc 'Start Gemstone stone'
     task :start do
-      run "cd #{path_application} && startGemstone"
+      run "cd #{path_application} && umask 0002 && startGemstone"
     end
 
     desc 'Stop Gemstone stone'
@@ -57,6 +57,16 @@ namespace :gemstone do
     task :backup do
       run 'runBackup'
     end
+    
+    desc 'EXPERIMENTAL. Clean memory and give statistics'
+    task :memory_maintenance do
+      code = <<-SMALLTALK
+Repository markForCollection
+SMALLTALK
+
+      run_gs(code)
+    end
+    
 
   end
 
@@ -64,7 +74,7 @@ namespace :gemstone do
   namespace :gems do
     desc 'Start the seaside gems cluster'
     task :start do
-      run "cd #{path_application} && runSeasideGems start"
+      run "cd #{path_application} && umask 0002 && runSeasideGems start"
     end
 
     desc 'Stop the seaside gems cluster'
