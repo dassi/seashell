@@ -72,19 +72,45 @@ SMALLTALK
 
   # Tasks related to gems
   namespace :gems do
+
+    task :configure_runner do
+      name = gems_seaside_adaptor
+      adaptor_class_name = case gems_seaside_adaptor.downcase.to_sym
+      when :swazoo
+        'WAGsSwazooAdaptor'
+      when :fastcgi
+        'WAFastCGIAdaptor'
+      else
+        raise "Unknown seaside adaptor #{gems_seaside_adaptor}"
+      end
+
+      code = <<-SMALLTALK
+WAGemStoneRunSeasideGems default
+  name: '#{name}';
+  adaptorClass: #{adaptor_class_name};
+  ports: #(#{gem_ports.join(' ')}).
+SMALLTALK
+
+      run_gs(code)
+
+    end
+
     desc 'Start the seaside gems cluster'
     task :start do
-      run "cd #{path_application} && umask 0002 && runSeasideGems start"
+      configure_runner
+      run "cd #{path_application} && umask 0002 && runSeasideGems30 start #{gems_seaside_adaptor} #{gem_ports.join(' ')}"
     end
 
     desc 'Stop the seaside gems cluster'
     task :stop do
-      run "cd #{path_application} && runSeasideGems stop"
+      configure_runner
+      run "cd #{path_application} && runSeasideGems30 stop #{gems_seaside_adaptor} #{gem_ports.join(' ')}"
     end
 
     desc 'Restart the seaside gems cluster'
     task :restart do
-      run "cd #{path_application} && runSeasideGems restart"
+      configure_runner
+      run "cd #{path_application} && runSeasideGems30 restart #{gems_seaside_adaptor} #{gem_ports.join(' ')}"
     end
 
   end
@@ -94,41 +120,17 @@ SMALLTALK
 
     desc 'Updates GLASS package'
     task :update do
-      glass_repository_url = 'http://seaside.gemstone.com/ss/GLASS'
-      available_versions = get_monticello_versions(glass_repository_url, '', '')
-      available_glass_versions = available_versions.select { |v| v.include?('GLASS') }
-      monticello_file = Capistrano::CLI.ui.choose(*available_glass_versions[0..20])
-      install_monticello_version(monticello_file, glass_repository_url, '', '')
+      say('Prefered way of doing this is via GemTools for now')
+      # glass_repository_url = 'http://seaside.gemstone.com/ss/GLASS'
+      # available_versions = get_monticello_versions(glass_repository_url, '', '')
+      # available_glass_versions = available_versions.select { |v| v.include?('GLASS') }
+      # monticello_file = Capistrano::CLI.ui.choose(*available_glass_versions[0..20])
+      # install_monticello_version(monticello_file, glass_repository_url, '', '')
     end
     
-    desc 'updates GLASS, if its older than Version 187'
-    task :update_from_pre_187 do
-      # TODO: Run the following code. Only if version is pre GLASS.187, which is the case on a fresh GLASS 2.3.1 repository.
-
-      smalltalk_code = <<-SMALLTALK
-| httpRepository version rg |
-SystemChangeAnnouncement 
-    compileMethod: 'item: ignored' 
-    category: 'accessing'.
-MCPlatformSupport autoMigrate: false.
-httpRepository := MCHttpRepository
-    location: 'http://seaside.gemstone.com/ss/GLASS'
-    user: ''
-    password: ''.
-"pick up the GLASS repository if it's already
- in default repository group"
-MCRepositoryGroup default repositoriesDo: [:rep |
-    rep = httpRepository ifTrue: [ httpRepository := rep ]].
-version := httpRepository
-    loadVersionFromFileNamed: 'GLASS.230-dkh.187.mcz'.
-version load.
-rg := version workingCopy repositoryGroup.
-rg addRepository: httpRepository.
-MCPlatformSupport autoMigrate: true.
-System commitTransaction.      
-SMALLTALK
-
-      run_gs(smalltalk_code)
+    desc 'Installs Seaside'
+    task :install_seaside do
+      install_metacello_version('Seaside30', '3.0.0')
     end
       
   end
@@ -138,14 +140,6 @@ SMALLTALK
     run 'gslist -vx'
   end
   
-  # Will install Gemstone on a fresh server
-  # TODO!
-  task :install do
-    # OK, this is not tested! And most likely needs more stuff to really work...
-    run 'wget http://seaside.gemstone.com/scripts/installGemstone2.3-Linux.sh'
-    run 'chmod 700 installGemstone2.3-Linux.sh'
-    run 'installGemstone2.3-Linux.sh'
-  end
 end
 
 

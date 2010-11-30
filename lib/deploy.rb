@@ -31,58 +31,36 @@ namespace :deploy do
     
   end
 
-  desc 'Deploy a version from monticello'
+  desc 'Deploy a version from metacello'
   task :default do
     # TODO? Make backup snapshot before deploying?
     # backup
     
     # TODO: Check, if stone is running. Or even start it implicitly?
 
-    # Build the list of all packages to load. The application itself, plus required packages.
-    package_names = [monticello_package_name]
-    if exists?(:required_packages) and required_packages.any?
-      package_names = required_packages + package_names
-    end
 
-    # TODO: Only load packages, if there are new versions available?
-    for package_name in package_names
-      # Ask for Monticello version (show only latest 20)
-      available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password, nil, package_name)
-      monticello_file = Capistrano::CLI.ui.choose(*available_versions[0..20])
-      install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
-    end
+    # Ask for Metacello version (show only latest 20)
+    update_configuration_of_metacello_project(metacello_project_name, metacello_repository_url, metacello_repository_user, metacello_repository_password)
+    available_versions = get_metacello_versions(metacello_project_name)
+    metacello_version = Capistrano::CLI.ui.choose(*available_versions[0..20])
+    install_metacello_version(metacello_project_name, metacello_version)
 
     find_and_execute_task('seaside:flush_caches')
     register
-    find_and_execute_task('seaside:remove_seaside_path')
+    find_and_execute_task('seaside:register_default_entry_point')
     write_file_libraries_to_disk
     set_deployment_mode
-    say("Your application #{monticello_file} has been deployed.")
+    say("Your application #{metacello_project_name} version #{metacello_version} has been deployed.")
   end
   
-  desc 'Update to the latest version from monticello repository'
-  task :update_to_latest do
-    available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password, nil, monticello_package_name)
-    monticello_file = available_versions.first
-    install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
-  end
-
-  desc 'Deploy any other package in the repository of the application'
-  task :package do
-    package_name = ask('Package name?')
-    available_versions = get_monticello_versions(monticello_repository_url, monticello_repository_user, monticello_repository_password, monticello_package_name, package_name)
-    monticello_file = Capistrano::CLI.ui.choose(*available_versions)
-    install_monticello_version(monticello_file, monticello_repository_url, monticello_repository_user, monticello_repository_password)
-  end
-
-
   desc 'Deploys the static files to disk. Taken from your applications FileLibrary classes'
   task :write_file_libraries_to_disk do
     script = ''
     for component, entry_point_name in entry_points
-      script << "(WADispatcher default entryPointAt: '#{entry_point_name}') writeLibrariesToDisk.\n"
+      script << "(WADispatcher default entryPointAt: '#{entry_point_name}') libraries do: [:each | each deployFiles].\n"
     end
-    
+    # TODO: writeLibrariesToDisk ist nicht mehr da!!!!!
+
     run_gs(script, :commit => false, :working_dir => "#{path_web_root}/files")
 
     # Change file permission, so that web server can read them
@@ -98,7 +76,8 @@ namespace :deploy do
       script << "(WADispatcher default entryPointAt: '#{entry_point_name}') preferenceAt: #deploymentMode put: true.\n"
     end
     
-    run_gs(script)
+    # TODO: deploymentMode funktioniert nicht so
+    # run_gs(script)
   end
    
   desc 'Register your seaside entry points'
@@ -124,13 +103,12 @@ namespace :deploy do
       create_switch_script
       create_topazini_file
       transfer_helper_files
-      say("Your fresh Gemstone/Seaside application directory has been setup at #{path_application}. Now go on and surf the seaside!")
+      say("Your fresh GemStone/Seaside application directory has been setup at #{path_application}. Now go on and surf the seaside!")
     end
 
     # Create used folders
     task :create_folders do
       run "mkdir -p #{path_application} #{path_data} #{path_backups} #{path_logs}"
-      run "mkdir -p #{path_lighty_application_configs}" if exists?(:path_lighty_application_configs)
 
       run "mkdir -p #{path_web_root}"
       run "mkdir -p #{path_web_root}/files"
@@ -142,8 +120,12 @@ namespace :deploy do
     # Copies the Gemstone intial repository into the project folder
     # OPTIMIZE: Make sure that this never destroys data. And shows a warning, if there is already data.
     task :copy_initial_repository do
-      run "cp /opt/gemstone/product/bin/extent0.seaside.dbf #{path_data}/extent0.dbf"
+      run "cp -i #{path_gemstone}/bin/extent0.seaside.dbf #{path_data}/extent0.dbf"
       run "chmod u+w #{path_data}/extent0.dbf"
+    end
+    
+    task :create_gemstone_application_config do
+      run "cp -i #{path_seaside}/data/gem.conf #{path_application}/#{stone}.conf"
     end
 
     # Creates convenience shell script for switching projects when working on the server
@@ -177,7 +159,6 @@ TOPAZ
     task :check do
       # TODO, check that:
       # - SHR_PAGE_CACHE_SIZE_KB should be half of the RAM, but never bigger! see in /opt/gemstone/product/seaside/data/system.conf
-      # - Line GEMS="9001 9002 9003" still in runSeasideGems?
       # - Check that lighty is configured to include the vhost-configs (include_shell "cat seaside_applications/*.conf")
     end
 

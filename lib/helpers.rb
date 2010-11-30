@@ -86,33 +86,103 @@ def get_monticello_versions(repository_url, repository_user, repository_password
 end
 
 # Loads the version +file+ from the repository
-def install_monticello_version(file, repository_url, repository_user, repository_password)
+def install_monticello_version(package_name, repository_url, repository_user, repository_password)
+
+  # monticello_load_script = <<-SMALLTALK
+  #   | httpRepository version rg |
+  #   MCPlatformSupport autoMigrate: true.
+  #   httpRepository := MCHttpRepository
+  #       location: '#{repository_url}'
+  #       user: '#{repository_user}'
+  #       password: '#{repository_password}'.
+  #   "pick up the repository if it's already
+  #    in default repository group"
+  #   MCRepositoryGroup default repositoriesDo: [:rep |
+  #       rep = httpRepository ifTrue: [ httpRepository := rep ]].
+  #   version := httpRepository loadVersionFromFileNamed: '#{file}'.
+  #   version load.
+  #   rg := version workingCopy repositoryGroup.
+  #   rg addRepository: httpRepository.
+  # SMALLTALK
 
   monticello_load_script = <<-SMALLTALK
     | httpRepository version rg |
     MCPlatformSupport autoMigrate: true.
-    httpRepository := MCHttpRepository
-        location: '#{repository_url}'
-        user: '#{repository_user}'
-        password: '#{repository_password}'.
-    "pick up the repository if it's already
-     in default repository group"
-    MCRepositoryGroup default repositoriesDo: [:rep |
-        rep = httpRepository ifTrue: [ httpRepository := rep ]].
-    version := httpRepository loadVersionFromFileNamed: '#{file}'.
-    version load.
-    rg := version workingCopy repositoryGroup.
-    rg addRepository: httpRepository.
+    Gofer new
+      url: '#{repository_url}' username: '#{repository_user}' password: '#{repository_password}';
+      package: '#{package_name}';
+      load.
   SMALLTALK
 
   # Debug: Show the script:
   # Capistrano::CLI.ui.say(monticello_load_script)
 
-  if Capistrano::CLI.ui.agree("Really load version #{file}?")
+  if Capistrano::CLI.ui.agree("Really load version #{package_name}?")
     run_gs(monticello_load_script)
-    say "Version #{file} loaded"
+    say "Version #{package_name} loaded"
   else
     say "Loading aborted"
+  end
+end
+
+
+def update_configuration_of_metacello_project(project_name, repository_url, repository_user, repository_password)
+  install_monticello_version("ConfigurationOf#{project_name}", repository_url, repository_user, repository_password)
+end
+
+
+# Gets a list of available monticello versions (via topaz)
+def get_metacello_versions(project_name)
+
+  output_filename = "metacello_versions.txt"
+  output_filepath_server = "#{path_application}/#{output_filename}"
+  
+  # Get versions from monticello and list them in a file
+  smalltalk_code = <<-SMALLTALK
+    | httpRepository versions myFile |
+    versions := ConfigurationOf#{project_name} project sortedAndFilteredVersions.
+    myFile := GsFile openWriteOnServer: '#{output_filepath_server}'.
+    versions do: [:each | 
+        myFile nextPutAll: each name.
+        myFile cr.].
+    myFile close.
+  SMALLTALK
+
+  run_gs(smalltalk_code, :commit => false)
+
+  # Download the file with the list
+  get output_filepath_server, output_filename
+
+  # Read in the version names from the text file
+  versions = File.readlines(output_filename, "\n").collect{ |s| s.strip }
+  
+  # Delete the temporary transfer files
+  run "rm #{output_filepath_server}"
+  File.delete(output_filename)
+
+  versions
+end
+
+
+# Loads the version +file+ from the repository
+def install_metacello_version(project_name, version_name)
+
+  metacello_load_script = <<-SMALLTALK
+    MCPlatformSupport autoMigrate: true.
+    (ConfigurationOf#{project_name} project version: '#{version_name}') load.
+  SMALLTALK
+  # TODO: Einfacher mit, aber wie kann man Version angeben? Gofer project load: #{project_name}
+
+
+
+  # Debug: Show the script:
+  # Capistrano::CLI.ui.say(monticello_load_script)
+
+  if Capistrano::CLI.ui.agree("Really load version #{version_name} of #{project_name}?")
+    run_gs(metacello_load_script)
+    say "...loaded."
+  else
+    say "...loading aborted!"
   end
 end
 

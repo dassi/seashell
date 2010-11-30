@@ -15,7 +15,8 @@ namespace :seaside do
 
   desc 'Flush caches (Magritte, ...)'
   task :flush_caches do
-    run_gs('MADescriptionBuilder default flush.')
+    # OPTIMIZE: don't depend on Magritte being installed here!
+    # run_gs('MADescriptionBuilder default flush.')
   end
 
   desc 'Deletes all sessions'
@@ -49,9 +50,9 @@ namespace :seaside do
     #   preferenceAt: #password put: 'new password'.    
   end
   
-  desc 'Removes the standard URI path prefix "/seaside"'
-  task :remove_seaside_path do
-    run_gs("WADispatcher default setName: ''. WADispatcher default defaultName: '#{default_entry_point}'.")
+  desc 'Register a default seaside application'
+  task :register_default_entry_point do
+    run_gs("WADispatcher default defaultName: '#{default_entry_point}'.")
   end
   
   

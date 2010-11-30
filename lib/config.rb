@@ -43,10 +43,9 @@ set :default_environment, {
   'GEMSTONE_DATADIR' => path_data,                                    # Data dir
   'GEMSTONE_KEYFILE' => "#{path_seaside}/etc/gemstone.key",           # Path to the Gemstone Web Edition keyfile (Same for all applications!)
   'GEMSTONE_SYS_CONF' => "#{path_seaside}/data/system.conf",          # Path to Gemstone system config file (Same for all applications!)
-  'GEMSTONE_EXE_CONF' => "#{path_seaside}/data",                      # Path to Gemstone executable config directory
+  'GEMSTONE_EXE_CONF' => "#{path_application}",                       # Path to Gemstone executable config directory
   'PATH' => "#{path_gemstone}/bin:#{path_seaside}/bin:$PATH",         # Path to Gemstone binaries
   'LD_LIBRARY_PATH' => "#{path_gemstone}/lib:$LD_LIBRARY_PATH",       # Gemstone library path
   'DYLD_LIBRARY_PATH' => "#{path_gemstone}/lib:$DYLD_LIBRARY_PATH",   # MacOSX library path
-  'GEMS' => gem_ports.join(' '),                                      # Listing of the local ports, each running one application instance gem
   'HOME' => path_application
 }

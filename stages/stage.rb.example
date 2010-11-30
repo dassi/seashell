@@ -36,16 +36,18 @@ set :gemstone_password do
   ask_password("Password for Gemstone user '#{gemstone_user}': ", 'swordfish')
 end
 
-# Monticello repository of your project's code
-set :monticello_repository_url, 'http://monticello.somedomain.org/myapp'
-set :monticello_package_name, 'MPMyApp'
-set :monticello_repository_user, 'squeak'
-set :monticello_repository_password do
-  ask_password("Password for Monticello user '#{monticello_repository_user}': ", 'fh3ss8f382nf')
+
+# Metacello repository of your project's code
+set :metacello_repository_url, 'http://monticello.somedomain.org/myapp'
+set :metacello_project_name, 'MPMyApp'
+set :metacello_repository_user, 'squeak'
+set :metacello_repository_password do
+  ask_password("Password for Metacello user '#{metacello_repository_user}': ", 'fh3ss8f382nf')
 end
 
+
 # Configuration of gems, running one application instance each.
-# (Don't forget to renew the web server configuration, if you change this!)
+set :gems_seaside_adaptor, 'fastcgi'
 set :gems_start_port, 10001
 set :gems_count, 3
 
