@@ -1,0 +1,2 @@
+# For rlwrap, used by iss.sh. Show a multiline editor when pressing Control-e
+Control-e: rlwrap_call_editor

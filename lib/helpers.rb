@@ -39,9 +39,9 @@ def ask_password(question, default = nil)
 end
 
 
-def update_configuration_of_metacello_project(project_name, repository_url, repository_user, repository_password)
-  install_monticello_version("ConfigurationOf#{project_name}", repository_url, repository_user, repository_password)
-end
+# def update_configuration_of_metacello_project(project_name, repository_url, repository_user, repository_password)
+#   install_monticello_version("ConfigurationOf#{project_name}", repository_url, repository_user, repository_password)
+# end
 
 
 # Gets a list of available monticello versions (via topaz)
@@ -53,10 +53,12 @@ def get_metacello_versions(project_name)
   # Get versions from monticello and list them in a file
   smalltalk_code = <<-SMALLTALK
     | httpRepository versions myFile |
-    versions := ConfigurationOf#{project_name} project sortedAndFilteredVersions.
+    versions := Gofer project
+      repository: '#{metacello_repository_url}' username: '#{metacello_repository_user}' password: '#{metacello_repository_password}';
+      availableVersionsOf: '#{project_name}'.
     myFile := GsFile openWriteOnServer: '#{output_filepath_server}'.
     versions do: [:each | 
-        myFile nextPutAll: each name.
+        myFile nextPutAll: each.
         myFile cr.].
     myFile close.
   SMALLTALK
@@ -77,21 +79,41 @@ def get_metacello_versions(project_name)
 end
 
 
-# Loads the version +file+ from the repository
-def install_metacello_version(project_name, version_name)
+# Loads a metacello project version from the repository
+def install_metacello_version(project_name, version_name = nil, group_names = nil, options = {})
 
+  group_names ||= []
+
+  version_parameter = version_name && "version: '#{version_name}'"
+  
+  group_names_string = group_names.collect{ |gn| "'#{gn}'" }.join(' ')
+  if group_names.any?
+    group_parameter = "group: #(#{group_names_string})"
+  else
+    group_parameter = nil
+  end
+  
+  # Build smalltalk script
+  # (Setting autoCommit is needed if loading from Topaz)
   metacello_load_script = <<-SMALLTALK
-    MCPlatformSupport autoMigrate: true.
-    (ConfigurationOf#{project_name} project version: '#{version_name}') load.
+    | autoCommit |
+    autoCommit := MCPlatformSupport autoCommit.
+    MCPlatformSupport autoCommit: true.
+    MCPlatformSupport commitOnAlmostOutOfMemoryDuring: [
+      [Gofer project
+        repository: '#{metacello_repository_url}' username: '#{metacello_repository_user}' password: '#{metacello_repository_password}';
+        load: '#{project_name}' #{version_parameter} #{group_parameter}]
+        on: Warning
+        do: [:ex |
+          Transcript cr; show: ex description.
+          ex resume ]].
+    MCPlatformSupport autoCommit: autoCommit.
   SMALLTALK
-  # TODO: Einfacher mit, aber wie kann man Version angeben? Gofer project load: #{project_name}
-
-
 
   # Debug: Show the script:
   # Capistrano::CLI.ui.say(monticello_load_script)
 
-  if Capistrano::CLI.ui.agree("Really load version #{version_name} of #{project_name}?")
+  if options[:force] or Capistrano::CLI.ui.agree("Really load version #{version_name} of #{project_name}?")
     run_gs(metacello_load_script)
     say "...loaded."
   else
@@ -156,6 +178,7 @@ logout
 exit
 TEXT
 
+  say('Performing Smalltalk code on the server...')
   run_topaz_script(topaz_script, options)
 
   # Get the output text file and read it

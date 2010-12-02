@@ -55,7 +55,29 @@ namespace :gemstone do
 
     desc 'Make a backup of the data'
     task :backup do
-      run 'runBackup'
+
+      timestamp = Time.now.strftime('%Y%m%d_%H%M')
+      # We use our own modified version of the runBackup script of the GemStone distribution, since that one has fixed pathes inside.
+      code = <<-SMALLTALK
+        | status |
+        status := 'failed'.
+        [
+          GsFile gciLogServer: DateAndTime now printString.
+          GsFile gciLogServer: 'Performing backup from SeaShell...'.
+          (System suspendCheckpointsForMinutes: 5)
+            ifTrue: [
+              System performOnServer: 'cp #{path_data}/extent0.dbf #{path_backups}/backup_#{timestamp}.dbf'.
+              status := 'success'.
+            ].
+        ] ensure: [ System resumeCheckpoints].
+        GsFile gciLogServer: DateAndTime now printString.
+        GsFile gciLogServer: '...backup status: ', status.
+        output := status.
+        SMALLTALK
+        
+        say("Starting backup...")
+        status = run_gs(code)
+        say("...backup #{status}")
     end
     
     desc 'EXPERIMENTAL. Clean memory and give statistics'
@@ -128,9 +150,27 @@ SMALLTALK
       # install_monticello_version(monticello_file, glass_repository_url, '', '')
     end
     
-    desc 'Installs Seaside'
+    desc 'Installs latest Seaside'
     task :install_seaside do
-      install_metacello_version('Seaside30', '3.0.0')
+
+      groups = ['Base']
+      groups.concat(seaside_project_required_groups)
+      
+      if is_production
+        # do nothing
+      else
+        groups << 'Development'
+      end
+      
+      # The server adaptor which is used by the project
+      case gems_seaside_adaptor
+        when 'swazoo'
+          groups << 'Seaside-Adaptors-Swazoo'
+        when 'fastcgi'
+          groups << 'Seaside-Adaptors-FastCGI'
+      end
+
+      install_metacello_version('Seaside30', nil, groups)
     end
       
   end

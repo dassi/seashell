@@ -25,6 +25,7 @@ default_set :path_data, "#{path_application}/data"
 default_set :path_backups, "#{path_data}/backups"
 default_set :path_web_root, "#{path_application}/web_root"
 default_set :stone, application
+default_set :is_production, false
 
 set :gem_ports, (gems_start_port..(gems_start_port + gems_count - 1)).to_a
 

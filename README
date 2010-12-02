@@ -24,6 +24,14 @@ How to use
 - Open a shell in the folder you have put SeaShell
 - Run "cap -T" on the shell to get a list of tasks and their description
 - Choose your stage and run a task, for example "cap production info:env". (In fact, for each of your stages there will be a task to switch to that stage. For example "production". You need to execute that stage-choosing task prior to any other task. The general form of invocation thus is: cap <stage> <command>)
+
+Goodies on server side
+======================
+On your servers projects application path, there will be some files for your convenience:
+- iss: Interactive Smalltalk Shell, just invoke it and then run Smalltalk code directly. It holds a topaz session in the background to run the code. This tool simplifies the "talk to your application". Needs the tool "rlwrap" to be present on your system (Ubuntu: sudo apt-get install rlwrap).
+- executeSmalltalk.sh: executeSmalltalk.sh <some smalltalk code>
+- <application name>.conf: Application specific GemStone configuration file
+- switch_environment: Some environment variable settings to "source-in" your shell, for switching to the current application. Use like this "source ./switch_environment" in your shell.
      
 Remarks
 =======

@@ -14,11 +14,18 @@
 # Name of the application (No whitespace, no special characters!)
 set :application, 'myapp'
 
+# Set to true if this stage is a production server and needs some extra carefully steps. Set to false, if it's only a test server.
+set :is_production, true
+
 # Domains of the deployed application (Example: www.myhost.com)
 set :domains, ['myapp.org', 'myapp.com', 'myapp.yourdomain.net']
 
 # Hostname of your server. Your deployed application runs there.
 set :host, 'server7'
+
+# Uncomment this, if you have trouble with messages like "no tty present and no askpass program specified".
+# This is the case on Ubuntu Lucid 10.04
+# default_run_options[:pty] = true
 
 # User and group which is used for logging into the server
 set :user, 'glass'
@@ -28,7 +35,6 @@ set :user_group, 'adm'
 set :path_base, '/opt/gemstone'
 set :path_gemstone, "#{path_base}/product"
 set :path_seaside, "#{path_gemstone}/seaside"
-set :path_lighty_application_configs, '/etc/lighttpd/seaside_applications'
 
 # User and password for logging into Gemstone
 set :gemstone_user, 'DataCurator'
@@ -57,11 +63,6 @@ set :entry_points, {'MPApplicationComponent' => 'mywonderfulapp', 'MPAdminApplic
 
 # The default entry point to redirect to, if browsing at root URL
 set :default_entry_point, 'mywonderfulapp'
-
-# Required packages, which are not requirable by the application Monticello package itself
-# (Example: Platform specific code)
-set :required_packages, ['MPSomePackageOnlyForProductionMachine']
-
 
 # The following variables normally are set by default later, if not preset here. If needed you can override them here:
 # set :path_application, "#{path_base}/applications/#{application}"

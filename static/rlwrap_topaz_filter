@@ -1,0 +1,36 @@
+#!/usr/bin/env perl
+
+# Filter for the interactive smalltalk shell (iss.sh). Takes an input an wraps it within the topaz "run ... %" sequence
+
+use lib ($ENV{RLWRAP_FILTERDIR} or ".");
+use lib "/usr/share/rlwrap/filters";
+use RlwrapFilter;
+# use POSIX qw(:signal_h);
+use strict;
+
+my $filter = new RlwrapFilter;
+my $name = $filter -> name;
+my $input;
+
+$filter -> help_text("Usage: rlwrap -z $name \n");
+
+$filter -> input_handler(\&input);
+$filter -> echo_handler(\&echo);
+#$filter -> output_handler(\&output);
+$filter -> run;
+
+sub input {
+  $input = $_;
+  if ($input eq "exit") {
+    return "logout\nexit\n";
+  } else {
+    return "run\n$input\n%\n";
+  }
+}
+
+sub echo {
+  return $input;
+}
+
+sub output {
+}

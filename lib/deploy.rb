@@ -33,24 +33,39 @@ namespace :deploy do
 
   desc 'Deploy a version from metacello'
   task :default do
-    # TODO? Make backup snapshot before deploying?
-    # backup
     
     # TODO: Check, if stone is running. Or even start it implicitly?
 
-
     # Ask for Metacello version (show only latest 20)
-    update_configuration_of_metacello_project(metacello_project_name, metacello_repository_url, metacello_repository_user, metacello_repository_password)
+    # update_configuration_of_metacello_project(metacello_project_name, metacello_repository_url, metacello_repository_user, metacello_repository_password)
     available_versions = get_metacello_versions(metacello_project_name)
     metacello_version = Capistrano::CLI.ui.choose(*available_versions[0..20])
-    install_metacello_version(metacello_project_name, metacello_version)
 
+    find_and_execute_task('gemstone:gems:stop')
+    find_and_execute_task('gemstone:stone:backup') if is_production
+    install_metacello_version(metacello_project_name, metacello_version, nil, :force => true)
     find_and_execute_task('seaside:flush_caches')
     register
     find_and_execute_task('seaside:register_default_entry_point')
     write_file_libraries_to_disk
-    set_deployment_mode
+    set_deployment_mode if is_production
+    find_and_execute_task('gemstone:gems:start')
     say("Your application #{metacello_project_name} version #{metacello_version} has been deployed.")
+  end
+
+  task :initial do
+    
+    # Ask for Metacello version
+    available_versions = get_metacello_versions(metacello_project_name)
+    metacello_version = Capistrano::CLI.ui.choose(*available_versions[0..20])
+
+    install_metacello_version(metacello_project_name, metacello_version, nil, :force => true)
+    register
+    find_and_execute_task('seaside:register_default_entry_point')
+    write_file_libraries_to_disk
+    set_deployment_mode if is_production
+    find_and_execute_task('gemstone:gems:start')
+    say("Your application #{metacello_project_name} version #{metacello_version} has been deployed for the first time.")
   end
   
   desc 'Deploys the static files to disk. Taken from your applications FileLibrary classes'
@@ -59,7 +74,6 @@ namespace :deploy do
     for component, entry_point_name in entry_points
       script << "(WADispatcher default entryPointAt: '#{entry_point_name}') libraries do: [:each | each deployFiles].\n"
     end
-    # TODO: writeLibrariesToDisk ist nicht mehr da!!!!!
 
     run_gs(script, :commit => false, :working_dir => "#{path_web_root}/files")
 
@@ -100,6 +114,7 @@ namespace :deploy do
     task :default do
       create_folders
       copy_initial_repository
+      create_gemstone_application_config
       create_switch_script
       create_topazini_file
       transfer_helper_files
@@ -120,12 +135,12 @@ namespace :deploy do
     # Copies the Gemstone intial repository into the project folder
     # OPTIMIZE: Make sure that this never destroys data. And shows a warning, if there is already data.
     task :copy_initial_repository do
-      run "cp -i #{path_gemstone}/bin/extent0.seaside.dbf #{path_data}/extent0.dbf"
+      run "cp -n -v #{path_gemstone}/bin/extent0.seaside.dbf #{path_data}/extent0.dbf"
       run "chmod u+w #{path_data}/extent0.dbf"
     end
     
     task :create_gemstone_application_config do
-      run "cp -i #{path_seaside}/data/gem.conf #{path_application}/#{stone}.conf"
+      run "cp -n -v #{path_seaside}/data/gem.conf #{path_application}/#{stone}.conf"
     end
 
     # Creates convenience shell script for switching projects when working on the server
@@ -143,6 +158,7 @@ namespace :deploy do
 set gemstone #{stone}
 set username #{gemstone_user}
 set password #{gemstone_password}
+login
 TOPAZ
 
       put topazini, "#{path_application}/.topazini"
@@ -150,9 +166,11 @@ TOPAZ
     
     # Copies some files, helper scripts etc., which are held in the "static" folder locally
     task :transfer_helper_files do
-      filepath = "#{path_application}/executeSmalltalk.sh"
-      put File.read('static/executeSmalltalk.sh'), filepath
-      run "chmod +x #{filepath}"
+      (Dir.glob('static/*') + Dir.glob('static/.[a-z]*')).each do |filename|
+        filepath_target = "#{path_application}/#{File.basename(filename)}"
+        put File.read(filename), filepath_target
+        run "chmod +x #{filepath_target}" # if File.extname(filename) == '.sh'
+      end
     end
 
     # desc 'Checks all kind of stuff on the server, to ensure things will work.'

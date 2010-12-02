@@ -1,0 +1,8 @@
+#!/bin/bash
+   
+# Needs the tool rlwrap (apt-get install rlwrap)
+
+export RLWRAP_EDITOR="vim +%L"
+export RLWRAP_FILTERDIR=$PWD
+
+rlwrap --substitute-prompt "iss> " --filter rlwrap_topaz_filter --multi-line topazl -q

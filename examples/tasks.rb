@@ -40,8 +40,19 @@ namespace :my_tasks do
     def do_this_with_parameter(a_number)
       # Do something with that number
     end
-
     
   end
   
+  task :flush_caches do
+    # Flush magritte caches
+    run_gs('MADescriptionBuilder default flush.')
+  end
+  
+  
+end
+
+
+# Install hooks on other existing tasks. Here we want a cache flush, after each deployment.
+after 'deploy' do
+  find_and_execute_task('sirop:flush_caches')
 end
