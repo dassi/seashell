@@ -96,9 +96,11 @@ def install_metacello_version(project_name, version_name = nil, group_names = ni
   # Build smalltalk script
   # (Setting autoCommit is needed if loading from Topaz)
   metacello_load_script = <<-SMALLTALK
-    | autoCommit |
+    | autoCommit autoMigrate |
     autoCommit := MCPlatformSupport autoCommit.
+    autoMigrate := MCPlatformSupport autoMigrate.
     MCPlatformSupport autoCommit: true.
+    MCPlatformSupport autoMigrate: true.
     MCPlatformSupport commitOnAlmostOutOfMemoryDuring: [
       [Gofer project
         repository: '#{metacello_repository_url}' username: '#{metacello_repository_user}' password: '#{metacello_repository_password}';
@@ -108,6 +110,7 @@ def install_metacello_version(project_name, version_name = nil, group_names = ni
           Transcript cr; show: ex description.
           ex resume ]].
     MCPlatformSupport autoCommit: autoCommit.
+    MCPlatformSupport autoMigrate: autoMigrate.
   SMALLTALK
 
   # Debug: Show the script:
@@ -131,7 +134,8 @@ def run_gs(smalltalk_code, options = {})
   output_filename = 'seashell_output.txt'
   working_dir = options[:working_dir]
 
-  options[:commit] ||= true
+  options[:commit] = true if options[:commit].nil?
+  options[:catch_errors] = false if options[:catch_errors].nil?
   
   # Remove possible whitespaces at begin and end od script
   smalltalk_code.strip!
@@ -157,6 +161,15 @@ def run_gs(smalltalk_code, options = {})
   else
     commit_code = nil
   end
+  
+  # TODO: Show those errors in topaz output!
+  if options[:catch_errors]
+    catch_code_pre = '['
+    catch_code_post = '] on: Error do: [:ex | Transcript cr; show: ex description].'
+  else
+    catch_code_pre = nil
+    catch_code_post = nil
+  end
 
   # Important! Don't indent the following script, as the "%" sign needs to come without indentation for topaz!
   topaz_script = <<-TEXT
@@ -166,10 +179,12 @@ set password #{gemstone_password}
 login
 output push topaz_script.log
 iferr 1 stk
-printit
+run
 #{declaration_code}
+#{catch_code_pre}
 #{smalltalk_code}
 #{commit_code}
+#{catch_code_post}
 (GsFile openWriteOnServer: '#{output_filename}')
   nextPutAll: output asString;
   close.

@@ -75,7 +75,7 @@ namespace :deploy do
       script << "(WADispatcher default entryPointAt: '#{entry_point_name}') libraries do: [:each | each deployFiles].\n"
     end
 
-    run_gs(script, :commit => false, :working_dir => "#{path_web_root}/files")
+    run_gs(script, :commit => false, :working_dir => "#{path_web_root}/files", :catch_errors => false)
 
     # Change file permission, so that web server can read them
     ensure_webserver_can_read_static_files
@@ -135,12 +135,13 @@ namespace :deploy do
     # Copies the Gemstone intial repository into the project folder
     # OPTIMIZE: Make sure that this never destroys data. And shows a warning, if there is already data.
     task :copy_initial_repository do
-      run "cp -n -v #{path_gemstone}/bin/extent0.seaside.dbf #{path_data}/extent0.dbf"
+      run "cp -u -v #{path_gemstone}/bin/extent0.seaside.dbf #{path_data}/extent0.dbf"
       run "chmod u+w #{path_data}/extent0.dbf"
     end
     
     task :create_gemstone_application_config do
-      run "cp -n -v #{path_seaside}/data/gem.conf #{path_application}/#{stone}.conf"
+      run "cp -u -v #{path_seaside}/data/gem.conf #{path_application}/#{stone}.conf"
+      run "cd #{path_application} && ln -s #{stone}.conf gem.conf"
     end
 
     # Creates convenience shell script for switching projects when working on the server
